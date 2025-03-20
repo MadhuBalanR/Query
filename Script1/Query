@@ -1,0 +1,50 @@
+import sqlite3
+import pandas as pd
+import matplotlib.pyplot as plt
+
+def inquire_by_year():
+    """ Asks the user for a year and retrieves the Bond movie released in that year. """
+    year = input("Enter the year you want to inquire about: ")
+
+    with sqlite3.connect('bond_movies.db') as con:
+        cur = con.cursor()
+        query = """SELECT Year, Movie, Bond FROM movies WHERE Year = ?;"""
+        cur.execute(query, (year,))
+        record = cur.fetchone()
+
+        if record:
+            print(f"Bond Movie in {year}: {record}")
+        else:
+            print(f"No Bond movie was released in {year}.")
+
+def plot_avg_imdb_by_car_mfg():
+    """ Retrieves the average IMDb rating grouped by BOND_CAR_MFG and plots a bar chart. """
+    with sqlite3.connect('bond_movies.db') as con:
+        query = """ 
+            SELECT BOND_CAR_MFG, AVG(Avg_User_IMDB) AS Avg_IMDB 
+            FROM movies 
+            GROUP BY BOND_CAR_MFG
+        """
+        df = pd.read_sql_query(query, con)
+
+    print(df)
+
+    if not df.empty:
+        df.set_index('BOND_CAR_MFG', inplace=True)  # Column name in uppercase
+        df.plot(kind='bar', legend=False, color='blue')
+
+        plt.xlabel('Bond Car Manufacturer')
+        plt.ylabel('Average IMDb Rating')
+        plt.title('Average IMDb Ratings by Bond Car Manufacturer')
+
+        plt.tight_layout()
+        plt.show()
+    else:
+        print("No data available for plotting.")
+
+def main():
+    inquire_by_year()
+    plot_avg_imdb_by_car_mfg()
+
+if __name__ == "__main__":
+    main()
